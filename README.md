@@ -1,6 +1,6 @@
 # vue-music
 
-> This is a website that mimics music App. 0
+> This is a website that mimics music App.
 
 ## Build Setup
 

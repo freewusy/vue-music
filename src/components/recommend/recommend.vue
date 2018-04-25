@@ -1,7 +1,14 @@
 <template>
   <div class="recommend" ref="recommend">
     <div>
-      <div class="slider-wrapper" ref="sliderWrapper">
+      <div v-if="recommends.length" class="slider-wrapper" ref="sliderWrapper">
+        <slider>
+          <div v-for="item in recommends" :key="item.id">
+            <a :href="item.linkUrl">
+              <img class="needsclick" :src="item.picUrl">
+            </a>
+          </div>
+        </slider>
       </div>
       <div class="recommend-list">
         <h1 class="list-title">热门歌单推荐</h1>
@@ -19,14 +26,23 @@
       </div>
     </div>
     <div class="loading-container">
+      <loading></loading>
     </div>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
+import Slider from '@/base/slider/slider'
 import { getRecommend } from '@/api/recommend'
 import { ERR_OK } from '@/api/config'
+
 export default {
+  data() {
+    return {
+      recommends: []
+    }
+  },
   created() {
     this._getRecommend()
   },
@@ -34,10 +50,13 @@ export default {
     _getRecommend() {
       getRecommend().then(res => {
         if (res.code === ERR_OK) {
-          console.log(res)
+          this.recommends = res.data.slider
         }
       })
     }
+  },
+  components: {
+    Slider
   }
 }
 </script>

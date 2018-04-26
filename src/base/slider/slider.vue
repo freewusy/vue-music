@@ -49,6 +49,7 @@ export default {
         return
       }
       this._setSliderWidth(true)
+      this.slider.refresh()
     })
   },
   methods: {
@@ -86,8 +87,6 @@ export default {
       })
 
       this.slider.on('scrollEnd', () => {
-        let pageIndex = this.slider.getCurrentPage().pageX
-        this.currentPageIndex = pageIndex
         if (this.autoPlay) {
           clearTimeout(this.timer)
           this._play()
@@ -95,10 +94,23 @@ export default {
       })
     },
     _play() {
+      let pageIndex = this.slider.getCurrentPage().pageX
+      this.currentPageIndex = pageIndex
       this.timer = setTimeout(() => {
-        this.slider.next(400)
+        this.slider.next()
       }, this.interval)
     }
+  },
+  activated() {
+    let pageIndex = this.slider.getCurrentPage().pageX
+    this.currentPageIndex = pageIndex
+    if (this.autoPlay) {
+      clearTimeout(this.timer)
+      this._play()
+    }
+  },
+  destroyed() {
+    clearTimeout(this.timer)
   }
 }
 </script>
@@ -138,9 +150,9 @@ export default {
         width: 8px
         height: 8px
         border-radius: 50%
-        background: $color-text-l
+        background: $color-text-dot
         &.active
           width: 20px
           border-radius: 5px
-          background: $color-text-ll
+          background: $color-text-dotl
 </style>

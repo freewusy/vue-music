@@ -1,6 +1,6 @@
 <template>
   <div class="rank" ref="rank">
-    <scroll class="toplist" ref="toplist">
+    <!-- <scroll class="toplist" ref="toplist">
       <ul>
         <li class="item">
           <div class="icon">
@@ -18,7 +18,7 @@
         <loading></loading>
       </div>
     </scroll>
-    <router-view></router-view>
+    <router-view></router-view> -->
   </div>
 </template>
 

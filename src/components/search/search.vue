@@ -1,6 +1,6 @@
 <template>
   <div class="search">
-    <div class="search-box-wrapper">
+    <!-- <div class="search-box-wrapper">
       <search-box ref="searchBox" @query="onQueryChange"></search-box>
     </div>
     <div ref="shortcutWrapper" class="shortcut-wrapper" v-show="!query">
@@ -30,7 +30,7 @@
       <suggest @listScroll="blurInput" @select="saveSearch" ref="suggest" :query="query"></suggest>
     </div>
     <confirm ref="confirm" @confirm="clearSearchHistory" text="是否清空所有搜索历史" confirmBtnText="清空"></confirm>
-    <router-view></router-view>
+    <router-view></router-view> -->
   </div>
 </template>
 

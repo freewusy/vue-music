@@ -87,6 +87,8 @@ export default {
       })
 
       this.slider.on('scrollEnd', () => {
+        let pageIndex = this.slider.getCurrentPage().pageX
+        this.currentPageIndex = pageIndex
         if (this.autoPlay) {
           clearTimeout(this.timer)
           this._play()
@@ -94,8 +96,6 @@ export default {
       })
     },
     _play() {
-      let pageIndex = this.slider.getCurrentPage().pageX
-      this.currentPageIndex = pageIndex
       this.timer = setTimeout(() => {
         this.slider.next()
       }, this.interval)

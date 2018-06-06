@@ -13,11 +13,7 @@ const portfinder = require('portfinder')
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
 
-const express = require('express')
 const axios = require('axios')
-const app = express()
-const apiRoutes = express.Router()
-app.use('/api', apiRoutes)
 
 const devWebpackConfig = merge(baseWebpackConfig, {
   module: {
@@ -51,7 +47,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     },
     before(app){
       app.get('/api/getDiscList', function (req, res) {
-        let url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
+        const url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
         axios.get(url, {
           headers: {
             referer: 'https://c.y.qq.com/',

@@ -1,17 +1,22 @@
 <template>
   <div class="singer" ref="singer">
-    <!-- <list-view @select="selectSinger" :data="singers" ref="list"></list-view>
-    <router-view></router-view> -->
+    <list-view :data="singers" ref="list"></list-view>
+    <!-- <router-view></router-view> -->
   </div>
 </template>
 <script>
+import ListView from '@/base/listview/listview'
 import { getSingerList } from '@/api/singer'
 import {ERR_OK} from '@/api/config'
+import Singer from '@/common/js/singer'
 
 const HOT_NAME = '热门'
 const HOT_SINGER_LEN = 10
 
 export default {
+  components: {
+    ListView
+  },
   data() {
     return {
       singers: []
@@ -38,11 +43,10 @@ export default {
 
       list.forEach((item, index) => {
         if (index < HOT_SINGER_LEN) {
-          map.hot.items.push({
-            id: item.Fsinger_id,
-            name: item.Fsinger_name,
-            avatar: `https://y.gtimg.cn/music/photo_new/T001R150x150${item.Fsinger_mid}.jpg?max_age=2592000`
-          })
+          map.hot.items.push(new Singer({
+            id: item.Fsinger_mid,
+            name: item.Fsinger_name
+          }))
         }
 
         const key = item.Findex
@@ -53,14 +57,36 @@ export default {
           }
         }
 
-        map[key].items.push({
-          id: item.Fsinger_id,
-          name: item.Fsinger_name,
-          avatar: `https://y.gtimg.cn/music/photo_new/T001R150x150${item.Fsinger_mid}.jpg?max_age=2592000`
-        })
+        map[key].items.push(new Singer({
+          id: item.Fsinger_mid,
+          name: item.Fsinger_name
+        }))
       })
 
-      return map
+      let hot = []
+      let ret = []
+      let num = []
+
+      for (let key in map) {
+        let val = map[key]
+        if (val.title.match(/[a-zA-Z]/)) {
+          ret.push(val)
+        } else if (val.title === HOT_NAME) {
+          hot.push(val)
+        } else {
+          num.push(val)
+        }
+      }
+
+      ret.sort((a, b) => {
+        return a.title.charCodeAt(0) - b.title.charCodeAt(0)
+      })
+
+      num.sort((a, b) => {
+        return a.title.charCodeAt(0) - b.title.charCodeAt(0)
+      })
+
+      return hot.concat(ret, num)
     }
   }
 }

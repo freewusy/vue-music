@@ -1,9 +1,10 @@
 <template>
   <div class="m-header">
-    <div class="icon">QQ音乐</div>
-    <!-- <router-link tag="div" class="mine" to="/user">
+    <div class="icon"></div>
+    <h1 class="text">Chicken Music</h1>
+    <router-link tag="div" class="mine" to="/user">
       <i class="icon-mine"></i>
-    </router-link> -->
+    </router-link>
   </div>
 </template>
 
@@ -21,17 +22,20 @@ export default {}
     text-align: center
     color: $color-theme
     font-size: 0
-    background-color: #31c27c
     .icon
       display: inline-block
       vertical-align: top
       margin-top: 6px
-      width: 116px
+      width: 30px
       height: 32px
       margin-right: 9px
-      background-image: url(./logo.png);
-      background-size: cover;
-      background-repeat: no-repeat;
+      bg-image('logo')
+      background-size: 30px 32px
+    .text
+      display: inline-block
+      vertical-align: top
+      line-height: 44px
+      font-size: $font-size-large
     .mine
       position: absolute
       top: 0

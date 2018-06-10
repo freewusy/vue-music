@@ -18,6 +18,10 @@ export default {
     },
     data: {
       type: Array
+    },
+    listenScroll: {
+      type: Boolean,
+      default: false
     }
   },
   mounted() {
@@ -34,6 +38,13 @@ export default {
         probeType: this.probeType,
         click: this.click
       })
+
+      if (this.listenScroll) {
+        let that = this
+        this.scroll.on('scroll', (pos) => {
+          that.$emit('scroll', pos)
+        })
+      }
     },
     enable() {
       this.scroll && this.scroll.enable()

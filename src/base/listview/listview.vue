@@ -1,5 +1,11 @@
 <template>
-  <scroll :data="data" class="listview" ref="listview">
+  <scroll class="listview"
+          ref="listview"
+          :data="data"
+          :listenScroll="listenScroll"
+          :probeType="probeType"
+          @scroll="scroll"
+  >
     <ul>
       <li v-for="(group, index) in data" :key="index" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
@@ -11,11 +17,17 @@
         </uL>
       </li>
     </ul>
-    <div class="list-shortcut" @touchstart.stop.prevent="onShortcutTouchStart" @touchmove.stop.prevent="onShortcutTouchMove"
-         @touchend.stop>
+    <div class="list-shortcut"
+        @touchstart.stop.prevent="onShortcutTouchStart"
+        @touchmove.stop.prevent="onShortcutTouchMove"
+        @touchend.stop>
       <ul>
-        <li v-for="(item, index) in shortcutList" :data-index="index" :key="index" class="item">{{item}}
-          <!-- :class="{'current':currentIndex===index}" -->
+        <li v-for="(item, index) in shortcutList"
+          :data-index="index"
+          :key="index" class="item"
+          :class="{'current':currentIndex===index}"
+        >
+          {{item}}
         </li>
       </ul>
     </div>
@@ -33,10 +45,17 @@ import Scroll from '@/base/scroll/scroll'
 import Loading from '@/base/loading/loading'
 import { getData } from '@/common/js/dom'
 
+const ANCHOR_HEIGHT = 18
 export default {
   components: {
     Scroll,
     Loading
+  },
+  created() {
+    this.touch = {}
+    this.listenScroll = true
+    this.listHeight = []
+    this.probeType = 3
   },
   props: {
     data: {
@@ -46,6 +65,12 @@ export default {
       }
     }
   },
+  data() {
+    return {
+      currentIndex: 0,
+      scrollY: -1
+    }
+  },
   computed: {
     shortcutList() {
       let list = this.data.map(item => item.title.substr(0, 1))
@@ -53,19 +78,83 @@ export default {
     }
   },
   methods: {
+    scroll(pos) {
+      this.scrollY = pos.y
+    },
     onShortcutTouchStart(e) {
       let anchorIndex
       if (e.target.dataset) {
         anchorIndex = e.target.dataset.index
-        console.log('dataset' + anchorIndex)
       } else {
         anchorIndex = getData(e.target, 'index')
       }
 
-      this.$refs.listview.scrollToElement(this.$refs.listGroup[anchorIndex], 0)
+      this.touch.y1 = e.touches[0].pageY
+      this.touch.anchorIndex = anchorIndex
+      this._scroll(anchorIndex)
     },
     onShortcutTouchMove(e) {
-
+      this.touch.y2 = e.touches[0].pageY
+      let speed = (this.touch.y2 - this.touch.y1) / ANCHOR_HEIGHT | 0
+      /**
+       * | 运算符 是通过转换二进制计算(注意，这里的计算不是相加，而是 或 运算)，3|4 => 0011 + 0100 = 0111(7), 4|4 => 0100 + 0100 = 0100(4)
+       * number|0 => 在正数的时候相当于Math.floor(),负数的时候相当于Math.ceil()
+       */
+      let anchorIndex = this.touch.anchorIndex * 1 + speed
+      this._scroll(anchorIndex)
+    },
+    _scroll(index) {
+      if (!index && index !== 0) {
+        return
+      }
+      if (index < 0) {
+        index = 0
+      } else if (index > this.data.length - 1) {
+        index = this.data.length - 1
+      }
+      this.currentIndex = parseInt(index)
+      this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
+    },
+    _calculateHeight() {
+      this.listHeight = []
+      const list = this.$refs.listGroup
+      let height = 0
+      this.listHeight.push(height)
+      if (list) {
+        for (let i = 0; i < list.length; i++) {
+          height += list[i].clientHeight
+          this.listHeight.push(height)
+        }
+      }
+    }
+  },
+  watch: {
+    data() {
+      setTimeout(() => {
+        this._calculateHeight()
+      }, 20)
+    },
+    scrollY(newY) {
+      const listHeight = this.listHeight
+      if (!listHeight.length) {
+        return
+      }
+      // 当滚动到顶部，newY>0
+      if (newY > 0) {
+        this.currentIndex = 0
+        return
+      }
+      // 在中间部分滚动
+      for (let i = 0; i < listHeight.length - 1; i++) {
+        let height1 = listHeight[i]
+        let height2 = listHeight[i + 1]
+        if (-newY >= height1 && -newY < height2) {
+          this.currentIndex = i
+          return
+        }
+      }
+      // 当滚动到底部，且-newY大于最后一个元素的上限
+      this.currentIndex = listHeight.length - 2
     }
   }
 }

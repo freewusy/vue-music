@@ -14,7 +14,7 @@
       <div class="filter" ref="filter"></div>
     </div>
     <div class="bg-layer" ref="layer"></div>
-    <scroll :data="songs" @scroll="scroll"
+    <!-- <scroll :data="songs" @scroll="scroll"
             :listen-scroll="listenScroll" :probe-type="probeType" class="list" ref="list">
       <div class="song-list-wrapper">
         <song-list :songs="songs" :rank="rank" @select="selectItem"></song-list>
@@ -22,9 +22,33 @@
       <div v-show="!songs.length" class="loading-container">
         <loading></loading>
       </div>
-    </scroll>
+    </scroll> -->
   </div>
 </template>
+
+<script>
+export default {
+  props: {
+    bgImg: {
+      type: String,
+      default: ''
+    },
+    songs: {
+      type: Array,
+      default: () => []
+    },
+    title: {
+      type: String,
+      default: ''
+    }
+  },
+  computed: {
+    bgStyle() {
+      return `background-image: url(${this.bgImg})`
+    }
+  }
+}
+</script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~common/stylus/variable"

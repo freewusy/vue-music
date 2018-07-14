@@ -1,16 +1,17 @@
 <template>
-  <scroll class="listview"
-          ref="listview"
-          :data="data"
-          :listenScroll="listenScroll"
-          :probeType="probeType"
-          @scroll="scroll"
+  <scroll
+    class="listview"
+    ref="listview"
+    :data="data"
+    :listenScroll="listenScroll"
+    :probeType="probeType"
+    @scroll="scroll"
   >
     <ul>
-      <li v-for="(group, index) in data" :key="index" class="list-group" ref="listGroup">
+      <li class="list-group" ref="listGroup" v-for="(group, index) in data" :key="index">
         <h2 class="list-group-title">{{group.title}}</h2>
         <uL>
-          <li  v-for="(item, index) in group.items" :key="index" class="list-group-item">
+          <li class="list-group-item" v-for="(item, index) in group.items" :key="index" @click="selectItem(item)">
             <img class="avatar" v-lazy="item.avatar">
             <span class="name">{{item.name}}</span>
           </li>
@@ -31,9 +32,9 @@
         </li>
       </ul>
     </div>
-    <!-- <div class="list-fixed" ref="fixed" v-show="fixedTitle">
+    <div class="list-fixed" ref="fixed" v-show="fixedTitle">
       <div class="fixed-title">{{fixedTitle}} </div>
-    </div> -->
+    </div>
     <div v-show="!data.length" class="loading-container">
       <loading></loading>
     </div>
@@ -46,6 +47,7 @@ import Loading from '@/base/loading/loading'
 import { getData } from '@/common/js/dom'
 
 const ANCHOR_HEIGHT = 18
+const TITLE_HEIGHT = 30
 export default {
   components: {
     Scroll,
@@ -68,16 +70,26 @@ export default {
   data() {
     return {
       currentIndex: 0,
-      scrollY: -1
+      scrollY: -1,
+      diff: -1
     }
   },
   computed: {
     shortcutList() {
       let list = this.data.map(item => item.title.substr(0, 1))
       return list
+    },
+    fixedTitle() {
+      if (this.scrollY >= 0) {
+        return ''
+      }
+      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
     }
   },
   methods: {
+    selectItem(item) {
+      this.$emit('select', item)
+    },
     scroll(pos) {
       this.scrollY = pos.y
     },
@@ -150,11 +162,20 @@ export default {
         let height2 = listHeight[i + 1]
         if (-newY >= height1 && -newY < height2) {
           this.currentIndex = i
+          this.diff = height2 + newY
           return
         }
       }
       // 当滚动到底部，且-newY大于最后一个元素的上限
       this.currentIndex = listHeight.length - 2
+    },
+    diff(newVal) {
+      let fixedTop = newVal > 0 && newVal < TITLE_HEIGHT ? newVal - TITLE_HEIGHT : 0
+      if (this.fixedTop === fixedTop) {
+        return
+      }
+      this.fixedTop = fixedTop
+      this.$refs.fixed.style.transform = `translateY(${fixedTop}px)`
     }
   }
 }

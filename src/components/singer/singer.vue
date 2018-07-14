@@ -1,14 +1,15 @@
 <template>
   <div class="singer" ref="singer">
-    <list-view :data="singers" ref="list"></list-view>
-    <!-- <router-view></router-view> -->
+    <list-view ref="list" :data="singers" @select="selectSinger"></list-view>
+    <router-view></router-view>
   </div>
 </template>
 <script>
 import ListView from '@/base/listview/listview'
 import { getSingerList } from '@/api/singer'
-import {ERR_OK} from '@/api/config'
+import { ERR_OK } from '@/api/config'
 import Singer from '@/common/js/singer'
+import { mapActions } from 'vuex'
 
 const HOT_NAME = '热门'
 const HOT_SINGER_LEN = 10
@@ -26,6 +27,7 @@ export default {
     this._getSingerList()
   },
   methods: {
+    ...mapActions(['setSinger']),
     _getSingerList() {
       getSingerList().then((res) => {
         if (res.code === ERR_OK) {
@@ -87,6 +89,19 @@ export default {
       })
 
       return hot.concat(ret, num)
+    },
+    selectSinger(singer) {
+      this.$router.push({
+        path: `/singer/${singer.id}`
+      })
+      /* const singerDetailId = singer.id
+      this.$router.push({
+        name: 'singerDetail', // name 指向 如 'user/:id' component
+        params: {
+          id: singerDetailId
+        }
+      }) */
+      this.setSinger(singer)
     }
   }
 }

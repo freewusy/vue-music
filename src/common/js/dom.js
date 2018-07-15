@@ -22,3 +22,35 @@ export function getData(el, name, val) {
     return el.getAttribute(name)
   }
 }
+
+// browser css3 hack
+let elementStyle = document.createElement('div').style
+let vendor = (() => {
+  let styleHack = {
+    standard: 'transform',
+    webkit: 'webkitTransform',
+    Moz: 'MozTransform',
+    O: 'OTransform',
+    ms: 'msTransform'
+  }
+
+  for (let key in styleHack) {
+    if (elementStyle[styleHack[key]] !== undefined) {
+      return key
+    }
+  }
+
+  return false
+})()
+
+export function hackStyle(style) {
+  if (vendor === false) {
+    return false
+  }
+
+  if (vendor === 'standard') {
+    return style
+  }
+
+  return vendor + style.charAt(0).toUpperCase() + style.substr(1)
+}

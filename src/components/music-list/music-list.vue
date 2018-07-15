@@ -4,7 +4,7 @@
       <i class="icon-back"></i>
     </div>
     <h1 class="title" v-html="title"></h1>
-    <div class="bg-image" :style="bgStyle" ref="bgImage">
+    <div class="bg-image" :style="bgStyle" ref="bgImg">
       <div class="play-wrapper">
         <div ref="playBtn" v-show="songs.length>0" class="play" @click="random">
           <i class="icon-play"></i>
@@ -14,20 +14,31 @@
       <div class="filter" ref="filter"></div>
     </div>
     <div class="bg-layer" ref="layer"></div>
-    <!-- <scroll :data="songs" @scroll="scroll"
-            :listen-scroll="listenScroll" :probe-type="probeType" class="list" ref="list">
+    <scroll :data="songs" :probe-type="probeType" :listen-scroll="listenScroll" @scroll="scroll" class="list" ref="list">
       <div class="song-list-wrapper">
-        <song-list :songs="songs" :rank="rank" @select="selectItem"></song-list>
+        <song-list :songs="songs"></song-list>
       </div>
       <div v-show="!songs.length" class="loading-container">
         <loading></loading>
       </div>
-    </scroll> -->
+    </scroll>
   </div>
 </template>
 
 <script>
+import Scroll from '@/base/scroll/scroll'
+import SongList from '@/base/song-list/song-list'
+import Loading from '@/base/loading/loading'
+import {hackStyle} from '@/common/js/dom'
+
+const RESERVED_HEIGHT = 40
+
 export default {
+  components: {
+    Scroll,
+    SongList,
+    Loading
+  },
   props: {
     bgImg: {
       type: String,
@@ -42,9 +53,60 @@ export default {
       default: ''
     }
   },
+  data() {
+    return {
+      scrollY: 0
+    }
+  },
   computed: {
     bgStyle() {
       return `background-image: url(${this.bgImg})`
+    }
+  },
+  created() {
+    this.probeType = 3
+    this.listenScroll = true
+  },
+  mounted() {
+    this.bgImgHeight = this.$refs.bgImg.clientHeight
+    this.maxTranslateY = -this.bgImgHeight + RESERVED_HEIGHT
+    this.$refs.list.$el.style.top = `${this.$refs.bgImg.clientHeight}px`
+  },
+  methods: {
+    back() {
+      this.$router.back()
+    },
+    random() {
+    },
+    scroll(pos) {
+      this.scrollY = pos.y
+    }
+  },
+  watch: {
+    scrollY(newy) {
+      let translateY = Math.max(newy, this.maxTranslateY)
+      let zIndex = 0
+      let scale = 1
+
+      if (newy > 0) {
+        const percent = Math.abs(newy / this.bgImgHeight)
+        scale = 1 + percent
+        zIndex = 10
+      }
+
+      if (newy < this.maxTranslateY) {
+        zIndex = 10
+        this.$refs.bgImg.style.paddingTop = 0
+        this.$refs.bgImg.style.height = `${RESERVED_HEIGHT}px`
+        this.$refs.playBtn.style.display = 'none'
+      } else {
+        this.$refs.bgImg.style.paddingTop = '70%'
+        this.$refs.bgImg.style.height = 0
+        this.$refs.playBtn.style.display = ''
+      }
+      this.$refs.layer.style[hackStyle('transform')] = `translate3d(0,${translateY}px,0)`
+      this.$refs.bgImg.style.zIndex = zIndex
+      this.$refs.bgImg.style[hackStyle('transform')] = `scale(${scale})`
     }
   }
 }

@@ -38,7 +38,7 @@
                 <p ref="lyricLine"
                    class="text"
                    :class="{'current': currentLineNum ===index}"
-                   v-for="(line,index) in currentLyric.lines">{{line.txt}}</p>
+                   v-for="(line,index) in currentLyric.lines" :key="index">{{line.txt}}</p>
               </div>
             </div>
           </scroll>
@@ -99,6 +99,26 @@
            @ended="end"></audio>
   </div>
 </template>
+
+<script>
+import { mapGetters } from 'vuex'
+export default {
+  computed: {
+    ...mapGetters([
+      'playlist',
+      'fullScreen',
+      'playlist',
+      'currentIndex'
+      // 'playing',
+      // 'sequenceList',
+      // 'mode',
+    ]),
+    currentSong() {
+      return this.playlist[this.currentIndex]
+    }
+  }
+}
+</script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~common/stylus/variable"

@@ -9,7 +9,7 @@ import ListView from '@/base/listview/listview'
 import { getSingerList } from '@/api/singer'
 import { ERR_OK } from '@/api/config'
 import Singer from '@/common/js/singer'
-import { mapActions } from 'vuex'
+import { mapMutations } from 'vuex'
 
 const HOT_NAME = '热门'
 const HOT_SINGER_LEN = 10
@@ -27,7 +27,7 @@ export default {
     this._getSingerList()
   },
   methods: {
-    ...mapActions(['setSinger']),
+    ...mapMutations({setSinger: 'SET_SINGER'}),
     _getSingerList() {
       getSingerList().then((res) => {
         if (res.code === ERR_OK) {

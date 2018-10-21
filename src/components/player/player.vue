@@ -1,6 +1,12 @@
 <template>
-  <div class="player" v-show="playlist.length>0">
-    <transition name="normal">
+  <div class="player" v-if="playlist.length>0">
+    <transition
+      name="normal"
+      @enter="enter"
+      @after-enter="afterEnter"
+      @leave="leave"
+      @after-leave="afterLeave"
+    >
       <div class="normal-player" v-show="fullScreen">
         <div class="background">
           <img width="100%" height="100%" :src="currentSong.image">
@@ -15,7 +21,7 @@
         <div class="middle">
           <div class="middle-l" ref="middleL">
             <div class="cd-wrapper" ref="cdWrapper">
-              <div class="cd">
+              <div class="cd" :class="cdCls">
                 <img class="image" :src="currentSong.image">
               </div>
             </div>
@@ -35,10 +41,10 @@
           </scroll> -->
         </div>
         <div class="bottom">
-          <div class="dot-wrapper">
+          <!-- <div class="dot-wrapper">
             <span class="dot"></span>
             <span class="dot"></span>
-          </div>
+          </div> -->
           <!-- <div class="progress-wrapper">
             <span class="time time-l">{{format(currentTime)}}</span>
             <div class="progress-bar-wrapper">
@@ -54,7 +60,7 @@
               <i class="icon-prev"></i>
             </div>
             <div class="icon i-center">
-              <i class="playIcon"></i>
+              <i :class="playIcon" @click="togglePlaying"></i>
             </div>
             <div class="icon i-right">
               <i class="icon-next"></i>
@@ -69,50 +75,145 @@
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click="open">
         <div class="icon">
-          <img width="40" height="40" :src="currentSong.image">
+          <img width="40" height="40" :src="currentSong.image" :class="cdCls">
         </div>
         <div class="text">
           <h2 class="name" v-html="currentSong.name"></h2>
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
-          <progress-circle :radius="radius" :percent="percent">
             <i @click.stop="togglePlaying" class="icon-mini" :class="miniIcon"></i>
-          </progress-circle>
+          <!-- <progress-circle :radius="radius" :percent="percent">
+          </progress-circle> -->
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
-    <!-- <playlist ref="playlist"></playlist>
-    <audio ref="audio" :src="currentSong.url" @play="ready" @error="error" @timeupdate="updateTime"
-           @ended="end"></audio> -->
+    <!-- <playlist ref="playlist"></playlist> -->
+    <audio ref="audio" :src="musicUrl"></audio>
   </div>
 </template>
 
 <script>
 import { mapGetters, mapMutations } from 'vuex'
+import animations from 'create-keyframe-animation'
+import { hackStyle } from '@/common/js/dom'
+import { ERR_OK } from '@/api/config'
+import { getSingerVkey } from '@/api/singer'
+
+const transform = hackStyle('transform')
+
 export default {
+  data() {
+    return {
+      musicUrl: ''
+    }
+  },
   computed: {
     ...mapGetters([
       'playlist',
       'fullScreen',
-      'currentSong'
-      // 'playing',
+      'currentSong',
+      'playing'
       // 'sequenceList',
       // 'mode',
-    ])
+    ]),
+    playIcon() {
+      return this.playing ? 'icon-pause' : 'icon-play'
+    },
+    miniIcon() {
+      return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+    },
+    cdCls() {
+      return this.playing ? 'play' : 'play pause'
+    }
   },
   methods: {
     ...mapMutations({
-      setFullScreen: 'SET_FULLSCREEN'
+      setFullScreen: 'SET_FULLSCREEN',
+      setPlaying: 'SET_PLAYING'
     }),
     back() {
       this.$store.commit('SET_FULLSCREEN', false)
     },
     open() {
       this.setFullScreen(true)
+    },
+    enter(el, done) {
+      const {x, y, scale} = this._getPosAndScale()
+      let animation = {
+        0: {
+          transform: `translate3d(${x}px,${y}px,0) scale(${scale})`
+        },
+        60: {
+          transform: `translate3d(0,0,0) scale(1.1)`
+        },
+        100: {
+          transform: `translate3d(0,0,0) scale(1)`
+        }
+      }
+
+      animations.registerAnimation({
+        name: 'move',
+        animation,
+        presets: {
+          duration: 400,
+          easing: 'linear'
+        }
+      })
+
+      animations.runAnimation(this.$refs.cdWrapper, 'move', done)
+    },
+    afterEnter() {
+      animations.unregisterAnimation('move')
+      this.$refs.cdWrapper.style.animation = ''
+    },
+    leave(el, done) {
+      this.$refs.cdWrapper.style.transition = 'all 0.4s'
+      const {x, y, scale} = this._getPosAndScale()
+      this.$refs.cdWrapper.style[transform] = `translate3d(${x}px,${y}px,0) scale(${scale})`
+      this.$refs.cdWrapper.addEventListener('transitionend', done)
+    },
+    afterLeave() {
+      this.$refs.cdWrapper.style.transition = ''
+      this.$refs.cdWrapper.style[transform] = ''
+    },
+    togglePlaying() {
+      this.setPlaying(!this.playing)
+    },
+    _getPosAndScale() {
+      const targetWidth = 40
+      const paddingLeft = 30
+      const paddingBottom = 30
+      const paddingTop = 80
+      const width = window.innerWidth * 0.8
+      const scale = targetWidth / width
+      const x = -(window.innerWidth / 2 - paddingLeft)
+      const y = window.innerHeight - paddingTop - width / 2 - paddingBottom
+      return {
+        x,
+        y,
+        scale
+      }
+    },
+    _getMusicUrl(mid, strMediaMid) {
+      getSingerVkey(mid).then(res => {
+        if (res.code === ERR_OK) {
+          let key = res.data.items[0].vkey
+          this.musicUrl = `http://dl.stream.qqmusic.qq.com/C100${strMediaMid}.m4a?vkey=${key}&fromtag=66`
+        }
+      }).catch(e => {
+        console.log(e)
+      })
+    }
+  },
+  watch: {
+    currentSong() {
+      let mid = this.currentSong.mid
+      let strMediaMid = this.currentSong.strMediaMid
+      this._getMusicUrl(mid, strMediaMid)
     }
   }
 }

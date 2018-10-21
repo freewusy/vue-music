@@ -29,7 +29,6 @@ export default {
     }
   },
   created() {
-    console.log(this.bgImg)
     this._getSingerDetail()
   },
   methods: {

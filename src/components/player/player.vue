@@ -54,19 +54,19 @@
           </div> -->
           <div class="operators">
             <div class="icon i-left">
-              <i class="iconMode"></i>
+              <i class="icon-sequence"></i>
             </div>
             <div class="icon i-left">
-              <i class="icon-prev"></i>
+              <i @click="prev" class="icon-prev"></i>
             </div>
             <div class="icon i-center">
               <i :class="playIcon" @click="togglePlaying"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon-next"></i>
+              <i @click="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon"></i>
+              <i class="icon icon-not-favorite"></i>
             </div>
           </div>
         </div>
@@ -92,7 +92,7 @@
       </div>
     </transition>
     <!-- <playlist ref="playlist"></playlist> -->
-    <audio ref="audio" :src="musicUrl"></audio>
+    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error"></audio>
   </div>
 </template>
 
@@ -100,15 +100,13 @@
 import { mapGetters, mapMutations } from 'vuex'
 import animations from 'create-keyframe-animation'
 import { hackStyle } from '@/common/js/dom'
-import { ERR_OK } from '@/api/config'
-import { getSingerVkey } from '@/api/singer'
 
 const transform = hackStyle('transform')
 
 export default {
   data() {
     return {
-      musicUrl: ''
+      songReady: false
     }
   },
   computed: {
@@ -116,7 +114,8 @@ export default {
       'playlist',
       'fullScreen',
       'currentSong',
-      'playing'
+      'playing',
+      'currentIndex'
       // 'sequenceList',
       // 'mode',
     ]),
@@ -133,7 +132,8 @@ export default {
   methods: {
     ...mapMutations({
       setFullScreen: 'SET_FULLSCREEN',
-      setPlaying: 'SET_PLAYING'
+      setPlaying: 'SET_PLAYING',
+      setCurrentIndex: 'SET_CURRENTINDEX'
     }),
     back() {
       this.$store.commit('SET_FULLSCREEN', false)
@@ -166,6 +166,34 @@ export default {
 
       animations.runAnimation(this.$refs.cdWrapper, 'move', done)
     },
+    prev() {
+      if (!this.songReady) {
+        return
+      }
+      let index = this.currentIndex - 1
+      if (index < 0) {
+        index = this.playlist.length - 1
+      }
+      this.setCurrentIndex(index)
+      if (!this.playing) {
+        this.togglePlaying()
+      }
+      this.songReady = false
+    },
+    next() {
+      if (!this.songReady) {
+        return
+      }
+      let index = this.currentIndex + 1
+      if (index === this.playlist.length) {
+        index = 0
+      }
+      this.setCurrentIndex(index)
+      if (!this.playing) {
+        this.togglePlaying()
+      }
+      this.songReady = false
+    },
     afterEnter() {
       animations.unregisterAnimation('move')
       this.$refs.cdWrapper.style.animation = ''
@@ -183,6 +211,12 @@ export default {
     togglePlaying() {
       this.setPlaying(!this.playing)
     },
+    ready() {
+      this.songReady = true
+    },
+    error() {
+
+    },
     _getPosAndScale() {
       const targetWidth = 40
       const paddingLeft = 30
@@ -197,23 +231,19 @@ export default {
         y,
         scale
       }
-    },
-    _getMusicUrl(mid, strMediaMid) {
-      getSingerVkey(mid).then(res => {
-        if (res.code === ERR_OK) {
-          let key = res.data.items[0].vkey
-          this.musicUrl = `http://dl.stream.qqmusic.qq.com/C100${strMediaMid}.m4a?vkey=${key}&fromtag=66`
-        }
-      }).catch(e => {
-        console.log(e)
-      })
     }
   },
   watch: {
-    currentSong() {
-      let mid = this.currentSong.mid
-      let strMediaMid = this.currentSong.strMediaMid
-      this._getMusicUrl(mid, strMediaMid)
+    currentSong(newval) {
+      this.$nextTick(() => {
+        this.$refs.audio.play()
+      })
+    },
+    playing(newval) {
+      this.$nextTick(() => {
+        const audio = this.$refs.audio
+        newval ? audio.play() : audio.pause()
+      })
     }
   }
 }

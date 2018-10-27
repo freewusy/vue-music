@@ -49,3 +49,5 @@ export function getSingerVkey(songmId) {
 
   return jsonp(url, data)
 }
+
+export const tst = () => 123

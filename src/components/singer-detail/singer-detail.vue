@@ -6,7 +6,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { getSingerDetail, getSingerVkey } from '@/api/singer'
+import { getSingerDetail } from '@/api/singer'
 import { ERR_OK } from '@/api/config'
 import { createSong } from '@/common/js/song'
 import MusicList from '../music-list/music-list'
@@ -55,23 +55,6 @@ export default {
         }
       })
       return ret
-    },
-    _getMusicUrl(val) {
-      getSingerVkey(val.mid).then(res => {
-        if (res.code === ERR_OK) {
-          let key = res.data.items[0].vkey
-          val.url = `http://dl.stream.qqmusic.qq.com/C100${val.strMediaMid}.m4a?vkey=${key}&fromtag=66`
-        }
-      }).catch(e => {
-        console.log(e)
-      })
-    }
-  },
-  watch: {
-    songs(newval) {
-      newval.forEach(item => {
-        this._getMusicUrl(item)
-      })
     }
   }
 }

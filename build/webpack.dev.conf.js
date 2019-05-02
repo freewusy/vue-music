@@ -14,6 +14,7 @@ const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
 
 const axios = require('axios')
+const qs = require('qs')
 
 const devWebpackConfig = merge(baseWebpackConfig, {
   module: {

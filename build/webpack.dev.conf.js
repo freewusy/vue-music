@@ -14,7 +14,7 @@ const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
 
 const axios = require('axios')
-const qs = require('qs')
+const bodyParser = require('body-parser')
 
 const devWebpackConfig = merge(baseWebpackConfig, {
   module: {
@@ -47,6 +47,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
       poll: config.dev.poll,
     },
     before(app){
+      // app.use(bodyParser.urlencoded({ extended: false }))
       app.get('/api/getDiscList', function (req, res) {
         const url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
         axios.get(url, {
@@ -58,6 +59,22 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         }).then((response) => {
           res.json(response.data)
         }).catch((e) => {
+          console.log(e)
+        })
+      })
+
+      app.post('/api/getPurlUrl', bodyParser.json(), function(req, res) {
+        let date = new Date().getTime()
+        let url = `https://u.y.qq.com/cgi-bin/musicu.fcg?_=${date}`
+        axios.post(url, req.body,{
+          headers: { 
+            origin: 'https://y.qq.com',
+            referer: 'https://y.qq.com',
+            'content-type': 'application/x-www-form-urlencoded' 
+          }
+        }).then((response) => {
+          res.json(response.data)
+        }).catch((e) =>{
           console.log(e)
         })
       })

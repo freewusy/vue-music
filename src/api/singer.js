@@ -1,5 +1,9 @@
+import axios from 'axios'
 import jsonp from 'common/js/jsonp'
-import { commonParams, options } from './config'
+import {
+  commonParams,
+  options
+} from './config'
 
 export function getSingerList() {
   const url = 'https://c.y.qq.com/v8/fcg-bin/v8.fcg'
@@ -33,4 +37,31 @@ export function getSingerDetail(singerId) {
   return jsonp(url, data, options)
 }
 
-export const tst = () => 123
+export function getPurlUrl(mids) {
+  const url = '/api/getPurlUrl'
+  const data = {
+    req_0: {
+      module: 'vkey.GetVkeyServer',
+      method: 'CgiGetVkey',
+      param: {
+        guid: '3869232352',
+        songmid: mids || [],
+        songtype: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        uin: '0',
+        loginflag: 0,
+        platform: '23',
+        h5to: 'speed'
+      }
+    },
+    comm: {
+      g_tk: 5381,
+      uin: 0,
+      format: 'json',
+      ct: 23,
+      cv: 0
+    }
+  }
+  return axios.post(url, data).then((res) => {
+    return Promise.resolve(res.data)
+  })
+}

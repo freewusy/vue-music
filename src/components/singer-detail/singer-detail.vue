@@ -1,12 +1,12 @@
 <template>
   <transition name="slide">
-    <music-list :title="title" :bgImg="bgImg" :songs="songs"></music-list>
+    <music-list :title="title" :bgImg="bgImg" :songs="songs" :plays="plays"></music-list>
   </transition>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import { getSingerDetail } from '@/api/singer'
+import { getSingerDetail, getPurlUrl } from '@/api/singer'
 import { ERR_OK } from '@/api/config'
 import { createSong } from '@/common/js/song'
 import MusicList from '../music-list/music-list'
@@ -16,7 +16,8 @@ export default {
   },
   data() {
     return {
-      songs: []
+      songs: [],
+      plays: []
     }
   },
   computed: {
@@ -41,6 +42,24 @@ export default {
       getSingerDetail(id).then(res => {
         if (res.code === ERR_OK) {
           this.songs = this._normalizeSongs(res.data.list)
+          let mids = this.songs.map((item) => {
+            return item.mid
+          })
+          this._getPurlUrl(mids)
+        }
+      }).catch(e => {
+        console.log(e)
+      })
+    },
+    _getPurlUrl(mids) {
+      getPurlUrl(mids).then((res) => {
+        if (res.code === ERR_OK) {
+          this.plays = res.req_0.data.midurlinfo.map(item => {
+            return {
+              mid: item.songmid,
+              purl: item.purl
+            }
+          })
         }
       }).catch(e => {
         console.log(e)

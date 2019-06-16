@@ -1,6 +1,6 @@
 <template>
   <transition name="slide">
-    <music-list :title="title" :bgImg="bgImg" :songs="songs" :plays="plays"></music-list>
+    <music-list :title="title" :bgImg="bgImg" :songs="songs"></music-list>
   </transition>
 </template>
 
@@ -59,6 +59,14 @@ export default {
               mid: item.songmid,
               purl: item.purl
             }
+          })
+
+          this.plays.forEach(play => {
+            this.songs.forEach((song, index) => {
+              if (play.mid === song.mid) {
+                play.purl ? song.url = 'http://dl.stream.qqmusic.qq.com/' + play.purl : this.songs.splice(index, 1)
+              }
+            })
           })
         }
       }).catch(e => {

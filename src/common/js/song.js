@@ -8,6 +8,7 @@ export default class Song {
     this.duration = duration
     this.image = image
     this.strMediaMid = strMediaMid
+    this.url = ''
   }
 }
 

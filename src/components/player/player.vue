@@ -1,5 +1,5 @@
 <template>
-  <div class="player" v-if="playlist.length>0">
+  <div class="player" v-show="playlist.length>0">
     <transition
       name="normal"
       @enter="enter"
@@ -45,24 +45,24 @@
             <span class="dot"></span>
             <span class="dot"></span>
           </div> -->
-          <!-- <div class="progress-wrapper">
+          <div class="progress-wrapper">
             <span class="time time-l">{{format(currentTime)}}</span>
             <div class="progress-bar-wrapper">
-              <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar>
+              <!-- <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar> -->
             </div>
             <span class="time time-r">{{format(currentSong.duration)}}</span>
-          </div> -->
+          </div>
           <div class="operators">
             <div class="icon i-left">
               <i class="icon-sequence"></i>
             </div>
-            <div class="icon i-left">
+            <div class="icon i-left" :class="disableCls">
               <i @click="prev" class="icon-prev"></i>
             </div>
-            <div class="icon i-center">
+            <div class="icon i-center" :class="disableCls">
               <i :class="playIcon" @click="togglePlaying"></i>
             </div>
-            <div class="icon i-right">
+            <div class="icon i-right" :class="disableCls">
               <i @click="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
@@ -92,7 +92,8 @@
       </div>
     </transition>
     <!-- <playlist ref="playlist"></playlist> -->
-    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error"></audio>
+    <audio ref="audio" data-src="currentSong.url" :src="currentSong.url" @canplay="ready" @error="error"
+          @timeupdate="updataTime"></audio>
   </div>
 </template>
 
@@ -106,7 +107,8 @@ const transform = hackStyle('transform')
 export default {
   data() {
     return {
-      songReady: false
+      songReady: false,
+      currentTime: 0
     }
   },
   computed: {
@@ -127,20 +129,12 @@ export default {
     },
     cdCls() {
       return this.playing ? 'play' : 'play pause'
+    },
+    disableCls() {
+      return this.songReady ? '' : 'disable'
     }
   },
   methods: {
-    ...mapMutations({
-      setFullScreen: 'SET_FULLSCREEN',
-      setPlaying: 'SET_PLAYING',
-      setCurrentIndex: 'SET_CURRENTINDEX'
-    }),
-    back() {
-      this.$store.commit('SET_FULLSCREEN', false)
-    },
-    open() {
-      this.setFullScreen(true)
-    },
     enter(el, done) {
       const {x, y, scale} = this._getPosAndScale()
       let animation = {
@@ -165,6 +159,31 @@ export default {
       })
 
       animations.runAnimation(this.$refs.cdWrapper, 'move', done)
+    },
+    afterEnter() {
+      animations.unregisterAnimation('move')
+      this.$refs.cdWrapper.style.animation = ''
+    },
+    leave(el, done) {
+      this.$refs.cdWrapper.style.transition = 'all 0.4s'
+      const {x, y, scale} = this._getPosAndScale()
+      this.$refs.cdWrapper.style[transform] = `translate3d(${x}px,${y}px,0) scale(${scale})`
+      this.$refs.cdWrapper.addEventListener('transitionend', done)
+    },
+    afterLeave() {
+      this.$refs.cdWrapper.style.transition = ''
+      this.$refs.cdWrapper.style[transform] = ''
+    },
+    ...mapMutations({
+      setFullScreen: 'SET_FULLSCREEN',
+      setPlaying: 'SET_PLAYING',
+      setCurrentIndex: 'SET_CURRENTINDEX'
+    }),
+    back() {
+      this.$store.commit('SET_FULLSCREEN', false)
+    },
+    open() {
+      this.setFullScreen(true)
     },
     prev() {
       if (!this.songReady) {
@@ -194,19 +213,17 @@ export default {
       }
       this.songReady = false
     },
-    afterEnter() {
-      animations.unregisterAnimation('move')
-      this.$refs.cdWrapper.style.animation = ''
+    updataTime(e) {
+      this.currentTime = e.target.currentTime
     },
-    leave(el, done) {
-      this.$refs.cdWrapper.style.transition = 'all 0.4s'
-      const {x, y, scale} = this._getPosAndScale()
-      this.$refs.cdWrapper.style[transform] = `translate3d(${x}px,${y}px,0) scale(${scale})`
-      this.$refs.cdWrapper.addEventListener('transitionend', done)
-    },
-    afterLeave() {
-      this.$refs.cdWrapper.style.transition = ''
-      this.$refs.cdWrapper.style[transform] = ''
+    format(interval) {
+      interval = interval | 0
+      const minute = interval / 60 | 0
+      let second = interval % 60
+      if (second.toString().length < 2) {
+        second = '0' + second
+      }
+      return `${minute}:${second}`
     },
     togglePlaying() {
       this.setPlaying(!this.playing)
@@ -215,7 +232,7 @@ export default {
       this.songReady = true
     },
     error() {
-
+      this.songReady = true
     },
     _getPosAndScale() {
       const targetWidth = 40
@@ -240,8 +257,8 @@ export default {
       })
     },
     playing(newval) {
+      const audio = this.$refs.audio
       this.$nextTick(() => {
-        const audio = this.$refs.audio
         newval ? audio.play() : audio.pause()
       })
     }

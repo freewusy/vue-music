@@ -14,14 +14,16 @@
       <div class="filter" ref="filter"></div>
     </div>
     <div class="bg-layer" ref="layer"></div>
-    <scroll :data="songs" :probe-type="probeType" :listen-scroll="listenScroll" @scroll="scroll" class="list" ref="list">
-      <div class="song-list-wrapper">
-        <song-list :songs="songs" @selectItem="selectItem"></song-list>
-      </div>
-      <div v-show="!songs.length" class="loading-container">
-        <loading></loading>
-      </div>
-    </scroll>
+    <div v-show="songs.length !== 0">
+      <scroll :data="songs" :probe-type="probeType" :listen-scroll="listenScroll" @scroll="scroll" class="list" ref="list">
+        <div class="song-list-wrapper">
+          <song-list :songs="songs" @selectItem="selectItem"></song-list>
+        </div>
+        <div v-show="!songs.length" class="loading-container">
+          <loading></loading>
+        </div>
+      </scroll>
+    </div>
   </div>
 </template>
 
